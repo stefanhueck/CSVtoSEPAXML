@@ -175,6 +175,9 @@ csv-to-sepa validate-xml output.xml pain.001.001.09.xsd
 csv-to-sepa validate-xml output.xml pain.001.001.09.xsd --language de
 ```
 
+If the XML or XSD path is wrong, the CLI now prints a clear file-not-found
+message including the resolved path.
+
 ## Tests
 
 ```bash

@@ -35,6 +35,9 @@ CLI_MESSAGES = {
         "validation_prefix_global": "global",
         "template_written": "CSV template written to {path} (mode={mode})",
         "xsd_import_error": "lxml is required for validate-xml (pip install .[xml])",
+        "xml_input_missing": "XML input file not found: {path}",
+        "xsd_input_missing": "XSD file not found: {path}",
+        "xml_read_error": "Could not read XML/XSD: {error}",
     },
     "de": {
         "config_written": "Konfiguration wurde geschrieben: {path}",
@@ -58,6 +61,9 @@ CLI_MESSAGES = {
         "validation_prefix_global": "global",
         "template_written": "CSV-Template wurde geschrieben: {path} (Modus={mode})",
         "xsd_import_error": "lxml wird für validate-xml benötigt (pip install .[xml])",
+        "xml_input_missing": "XML-Eingabedatei nicht gefunden: {path}",
+        "xsd_input_missing": "XSD-Datei nicht gefunden: {path}",
+        "xml_read_error": "XML/XSD konnte nicht gelesen werden: {error}",
     },
 }
 
@@ -229,8 +235,20 @@ def cmd_validate_xml(args: argparse.Namespace) -> None:
     except ImportError as exc:
         raise SystemExit(msg["xsd_import_error"]) from exc
 
-    xml_doc = etree.parse(args.input)
-    xsd_doc = etree.parse(args.xsd)
+    xml_path = Path(args.input).expanduser()
+    xsd_path = Path(args.xsd).expanduser()
+
+    if not xml_path.exists():
+        raise SystemExit(msg["xml_input_missing"].format(path=str(xml_path)))
+    if not xsd_path.exists():
+        raise SystemExit(msg["xsd_input_missing"].format(path=str(xsd_path)))
+
+    try:
+        xml_doc = etree.parse(str(xml_path))
+        xsd_doc = etree.parse(str(xsd_path))
+    except OSError as exc:
+        raise SystemExit(msg["xml_read_error"].format(error=str(exc))) from exc
+
     schema = etree.XMLSchema(xsd_doc)
 
     if schema.validate(xml_doc):
