@@ -1,0 +1,10 @@
+{
+  "debtor_name": "Beispiel Verein",
+  "debtor_iban": "DE89370400440532013000",
+  "debtor_bic": "COBADEFFXXX",
+  "initiating_party_name": "Beispiel Verein",
+  "default_execution_date": "2026-03-16",
+  "execution_date_offset_days": 1,
+  "charge_bearer": "SLEV",
+  "batch_booking": false
+}
