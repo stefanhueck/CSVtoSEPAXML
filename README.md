@@ -181,6 +181,39 @@ message including the resolved path.
 For missing XSD files, the CLI additionally prints a direct recovery hint with
 an example path usage.
 
+Recommended project setup:
+
+- Store XSD files in a versioned project folder such as `./xsd/`.
+- Run validation with a stable path, for example:
+
+```bash
+csv-to-sepa validate-xml output.xml ./xsd/pain.001.001.09.xsd
+```
+
+Recommended placement for your EPC package files:
+
+- `./xsd/EPC132-08_2025_V1.0_pain.001.001.09.xsd` (primary XSD for this project)
+- `./xsd/EPC132-08_2025_V1.0_pain.002.001.10.xsd` (optional, for status-report scenarios)
+- `./docs/epc/EPC132-08_2025_V1.0_pain.001.001.09_ERI` (optional reference doc)
+- `./docs/epc/EPC132-08_2025_V1.0_pain.001.001.09_TB` (optional reference doc)
+
+Optional convenience copy for shorter commands:
+
+- `./xsd/pain.001.001.09.xsd` (copy or symlink to the EPC `.xsd` file)
+
+Use the helper command to detect namespace and get suggested XSD filenames from an XML file:
+
+```bash
+csv-to-sepa check-namespace output.xml
+```
+
+Where to get the XSD online:
+
+- EPC SCT C2PSP Implementation Guidelines page (includes XSD downloads):
+	`https://www.europeanpaymentscouncil.eu/document-library/implementation-guidelines/sepa-credit-transfer-customer-psp-implementation-1`
+- ISO 20022 message catalogue download page for Payments Initiation (`pain`):
+	`https://www.iso20022.org/business-area/81/download`
+
 ## Tests
 
 ```bash

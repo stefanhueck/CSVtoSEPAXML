@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
+from xml.etree import ElementTree as ET
 
 from .config import create_config_interactive, load_config
 from .csv_reader import parse_csv
@@ -37,8 +38,16 @@ CLI_MESSAGES = {
         "xsd_import_error": "lxml is required for validate-xml (pip install .[xml])",
         "xml_input_missing": "XML input file not found: {path}",
         "xsd_input_missing": "XSD file not found: {path}",
-        "xsd_input_missing_hint": "Hint: place the XSD file in your current directory or pass an explicit path, e.g. csv-to-sepa validate-xml output.xml ./xsd/pain.001.001.09.xsd",
+        "xsd_input_missing_hint": "Hint: place the XSD file in your current directory or pass an explicit path, e.g. csv-to-sepa validate-xml output.xml ./xsd/pain.001.001.09.xsd\nDownload sources: EPC SCT C2PSP Implementation Guidelines page: https://www.europeanpaymentscouncil.eu/document-library/implementation-guidelines/sepa-credit-transfer-customer-psp-implementation-1\nISO 20022 message catalogue (business area 'pain'): https://www.iso20022.org/business-area/81/download",
         "xml_read_error": "Could not read XML/XSD: {error}",
+        "namespace_detected": "Detected XML namespace: {namespace}",
+        "namespace_message_id": "Detected message identifier: {message_id}",
+        "namespace_suggest_intro": "Suggested XSD path(s):",
+        "namespace_suggest_local": "- ./xsd/{message_id}.xsd",
+        "namespace_suggest_epc": "- ./xsd/EPC132-08_2025_V1.0_{message_id}.xsd",
+        "namespace_validate_example": "Validation example: csv-to-sepa validate-xml {xml_path} ./xsd/{message_id}.xsd",
+        "namespace_not_found": "Could not detect XML namespace from document root",
+        "namespace_parse_error": "Could not parse XML: {error}",
     },
     "de": {
         "config_written": "Konfiguration wurde geschrieben: {path}",
@@ -64,8 +73,16 @@ CLI_MESSAGES = {
         "xsd_import_error": "lxml wird für validate-xml benötigt (pip install .[xml])",
         "xml_input_missing": "XML-Eingabedatei nicht gefunden: {path}",
         "xsd_input_missing": "XSD-Datei nicht gefunden: {path}",
-        "xsd_input_missing_hint": "Hinweis: Lege die XSD-Datei im aktuellen Verzeichnis ab oder übergib einen expliziten Pfad, z. B. csv-to-sepa validate-xml output.xml ./xsd/pain.001.001.09.xsd",
+        "xsd_input_missing_hint": "Hinweis: Lege die XSD-Datei im aktuellen Verzeichnis ab oder übergib einen expliziten Pfad, z. B. csv-to-sepa validate-xml output.xml ./xsd/pain.001.001.09.xsd\nBezugsquellen: EPC SCT C2PSP Implementation Guidelines-Seite: https://www.europeanpaymentscouncil.eu/document-library/implementation-guidelines/sepa-credit-transfer-customer-psp-implementation-1\nISO 20022 Message-Katalog (Business Area 'pain'): https://www.iso20022.org/business-area/81/download",
         "xml_read_error": "XML/XSD konnte nicht gelesen werden: {error}",
+        "namespace_detected": "Erkannter XML-Namespace: {namespace}",
+        "namespace_message_id": "Erkannte Message-ID: {message_id}",
+        "namespace_suggest_intro": "Empfohlene XSD-Pfade:",
+        "namespace_suggest_local": "- ./xsd/{message_id}.xsd",
+        "namespace_suggest_epc": "- ./xsd/EPC132-08_2025_V1.0_{message_id}.xsd",
+        "namespace_validate_example": "Validierungsbeispiel: csv-to-sepa validate-xml {xml_path} ./xsd/{message_id}.xsd",
+        "namespace_not_found": "Konnte keinen XML-Namespace im Dokument-Root erkennen",
+        "namespace_parse_error": "XML konnte nicht geparst werden: {error}",
     },
 }
 
@@ -149,6 +166,16 @@ def main() -> None:
         help="Output language (default: en)",
     )
     validate_xml_parser.set_defaults(func=cmd_validate_xml)
+
+    check_namespace_parser = subparsers.add_parser("check-namespace", help="Inspect XML namespace and suggest matching XSD filenames")
+    check_namespace_parser.add_argument("input", help="Path to XML file")
+    check_namespace_parser.add_argument(
+        "--language",
+        choices=["en", "de"],
+        default="en",
+        help="Output language (default: en)",
+    )
+    check_namespace_parser.set_defaults(func=cmd_check_namespace)
 
     args = parser.parse_args()
     args.func(args)
@@ -262,6 +289,42 @@ def cmd_validate_xml(args: argparse.Namespace) -> None:
     for error in schema.error_log:
         print(f"line {error.line}: {error.message}")
     raise SystemExit(1)
+
+
+def cmd_check_namespace(args: argparse.Namespace) -> None:
+    msg = _messages(args.language)
+    xml_path = Path(args.input).expanduser()
+
+    if not xml_path.exists():
+        raise SystemExit(msg["xml_input_missing"].format(path=str(xml_path)))
+
+    namespace, message_id = _extract_namespace_and_message_id(xml_path)
+    if not namespace or not message_id:
+        raise SystemExit(msg["namespace_not_found"])
+
+    print(msg["namespace_detected"].format(namespace=namespace))
+    print(msg["namespace_message_id"].format(message_id=message_id))
+    print(msg["namespace_suggest_intro"])
+    print(msg["namespace_suggest_local"].format(message_id=message_id))
+    print(msg["namespace_suggest_epc"].format(message_id=message_id))
+    print(msg["namespace_validate_example"].format(xml_path=str(xml_path), message_id=message_id))
+
+
+def _extract_namespace_and_message_id(xml_path: Path) -> tuple[str | None, str | None]:
+    try:
+        root = ET.parse(str(xml_path)).getroot()
+    except ET.ParseError:
+        return None, None
+
+    tag = root.tag
+    if not (isinstance(tag, str) and tag.startswith("{")):
+        return None, None
+
+    namespace = tag[1:].split("}", 1)[0]
+    if "xsd:" not in namespace:
+        return namespace, None
+    message_id = namespace.rsplit("xsd:", 1)[-1]
+    return namespace, message_id
 
 
 def _print_validation_issues(exc: ValidationError, language: str) -> None:
