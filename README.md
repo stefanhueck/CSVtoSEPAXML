@@ -190,6 +190,12 @@ Recommended project setup:
 csv-to-sepa validate-xml output.xml ./xsd/pain.001.001.09.xsd
 ```
 
+Schema compatibility note:
+
+- For `pain.001.001.09`, `PmtInf/DbtrAgt` is always written before `ChrgBr`.
+- If no debtor BIC is configured, the XML uses `DbtrAgt/FinInstnId/Othr/Id = NOTPROVIDED`.
+- XML files generated with older project versions should be regenerated before XSD validation. Reinstall package first (for example: `python -m pip install .`), then rerun convert + validate. 
+
 Recommended placement for your EPC package files:
 
 - `./xsd/EPC132-08_2025_V1.0_pain.001.001.09.xsd` (primary XSD for this project)
@@ -224,4 +230,5 @@ pytest -q
 
 - Target profile is a robust minimal SCT setup (`PmtMtd=TRF`, `SvcLvl=SEPA`, `ChrgBr=SLEV`).
 - BIC is optional; when provided, it is validated and written to XML.
+- Debtor agent is always present in `PmtInf` (with `NOTPROVIDED` fallback when debtor BIC is empty) to satisfy `pain.001.001.09` schema ordering/structure.
 - Before production use, always verify files with your bank’s own MIG/upload checks.
