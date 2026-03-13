@@ -86,6 +86,8 @@ celerybeat-schedule
 
 # Environments
 .env
+.env.*
+!.env.example
 .venv
 env/
 venv/
@@ -130,3 +132,17 @@ Thumbs.db
 # Project specific generated outputs
 output*.xml
 config.json
+
+# Secret and certificate material
+*.pem
+*.key
+*.p12
+*.pfx
+*.cer
+*.crt
+*.der
+*.jks
+*.kdbx
+secrets.*
+*.secret
+*.secrets
