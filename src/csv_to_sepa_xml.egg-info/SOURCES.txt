@@ -20,6 +20,7 @@ src/csv_to_sepa_xml.egg-info/top_level.txt
 tests/test_cli_init_config.py
 tests/test_cli_localization.py
 tests/test_config_interactive.py
+tests/test_csv_reader_english_headers.py
 tests/test_csv_reader_extended.py
 tests/test_normalize.py
 tests/test_template.py

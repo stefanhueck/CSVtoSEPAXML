@@ -14,17 +14,28 @@ from .normalize import (
 )
 
 HEADER_ALIASES = {
+    # German headers
     "Name": "creditor_name",
     "Verwendungszweck": "remittance_unstructured",
     "Betrag": "amount",
     "IBAN": "creditor_iban",
     "BIC": "creditor_bic",
-    "EndToEndId": "end_to_end_id",
-    "ExecutionDate": "execution_date",
-    "PurposeCode": "purpose_code",
     "Ausfuehrungsdatum": "execution_date",
     "Ausführungsdatum": "execution_date",
     "VerwendungszweckCode": "purpose_code",
+
+    # English headers
+    "CreditorName": "creditor_name",
+    "RemittanceInformation": "remittance_unstructured",
+    "RemittanceInfo": "remittance_unstructured",
+    "Amount": "amount",
+    "CreditorIBAN": "creditor_iban",
+    "CreditorBIC": "creditor_bic",
+
+    # Shared extended headers
+    "EndToEndId": "end_to_end_id",
+    "ExecutionDate": "execution_date",
+    "PurposeCode": "purpose_code",
 }
 
 REQUIRED_TARGET_FIELDS = {

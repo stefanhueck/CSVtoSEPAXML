@@ -16,6 +16,12 @@ Name;Verwendungszweck;Betrag;IBAN;BIC
 - `IBAN` → creditor IBAN (`CdtrAcct/Id/IBAN`)
 - `BIC` → optional (`CdtrAgt/FinInstnId/BICFI`)
 
+Equivalent English minimal headers are also supported:
+
+```csv
+CreditorName;RemittanceInformation;Amount;CreditorIBAN;CreditorBIC
+```
+
 Extended input schema (backward compatible):
 
 ```csv
@@ -25,6 +31,9 @@ Name;Verwendungszweck;Betrag;IBAN;BIC;EndToEndId;ExecutionDate;PurposeCode
 - `EndToEndId` (optional): custom value instead of auto-generated ID
 - `ExecutionDate` (optional): row-level execution date `YYYY-MM-DD`
 - `PurposeCode` (optional): 4-character code (e.g. `SALA`, `TRAD`)
+
+English aliases are accepted for all key columns, including extended fields.
+This means real-world CSVs with either German or English header labels can be parsed.
 
 Backward compatibility:
 
