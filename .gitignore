@@ -147,3 +147,6 @@ config.json
 secrets.*
 *.secret
 *.secrets
+
+# VS Code settings
+.vscode/
