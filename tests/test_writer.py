@@ -82,3 +82,35 @@ def test_writer_splits_payment_info_by_execution_date_and_writes_purpose() -> No
     assert len(payment_infos) == 2
     assert len(purpose_codes) == 1
     assert purpose_codes[0].text == "SALA"
+
+
+def test_writer_includes_dbtragt_before_chrgbr_without_debtor_bic() -> None:
+    execution_date = date.today() + timedelta(days=1)
+    config = AppConfig(debtor_name="Sender", debtor_iban="DE89370400440532013000", debtor_bic=None)
+    payments = [
+        PaymentRecord(
+            row_number=2,
+            creditor_name="Receiver",
+            creditor_iban="DE12500105170648489890",
+            creditor_bic=None,
+            amount=Decimal("10.00"),
+            remittance_unstructured="Ref",
+            execution_date=execution_date,
+            end_to_end_id="E2E-1",
+        )
+    ]
+
+    xml_bytes = build_pain_001_001_09(config, payments)
+    root = ET.fromstring(xml_bytes)
+    ns = {"n": NS}
+
+    pmt_inf = root.find(".//n:PmtInf", namespaces=ns)
+    assert pmt_inf is not None
+
+    child_names = [child.tag.rsplit("}", 1)[-1] for child in list(pmt_inf)]
+    dbtr_agt_index = child_names.index("DbtrAgt")
+    chrg_br_index = child_names.index("ChrgBr")
+    assert dbtr_agt_index < chrg_br_index
+
+    not_provided = pmt_inf.findtext("n:DbtrAgt/n:FinInstnId/n:Othr/n:Id", namespaces=ns)
+    assert not_provided == "NOTPROVIDED"

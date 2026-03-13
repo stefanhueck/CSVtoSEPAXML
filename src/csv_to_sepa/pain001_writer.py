@@ -75,10 +75,13 @@ def _build_payment_info(
     dbtr_acct_id = ET.SubElement(dbtr_acct, _tag("Id"))
     ET.SubElement(dbtr_acct_id, _tag("IBAN")).text = config.debtor_iban
 
+    dbtr_agt = ET.SubElement(pmt_inf, _tag("DbtrAgt"))
+    fin_inst_id = ET.SubElement(dbtr_agt, _tag("FinInstnId"))
     if config.debtor_bic:
-        dbtr_agt = ET.SubElement(pmt_inf, _tag("DbtrAgt"))
-        fin_inst_id = ET.SubElement(dbtr_agt, _tag("FinInstnId"))
         ET.SubElement(fin_inst_id, _tag("BICFI")).text = config.debtor_bic
+    else:
+        othr = ET.SubElement(fin_inst_id, _tag("Othr"))
+        ET.SubElement(othr, _tag("Id")).text = "NOTPROVIDED"
 
     ET.SubElement(pmt_inf, _tag("ChrgBr")).text = config.charge_bearer
 
