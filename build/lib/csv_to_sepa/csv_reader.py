@@ -68,13 +68,23 @@ def parse_csv(
 
             row_execution_date = execution_date
             if normalized_row.get("execution_date", "").strip():
-                row_execution_date = parse_execution_date(normalized_row.get("execution_date", ""), offset_days=0)
+                try:
+                    row_execution_date = parse_execution_date(normalized_row.get("execution_date", ""), offset_days=0)
+                except ValueError as exc:
+                    raise ValueError(
+                        f"Row {row_number}, field ExecutionDate: {exc}"
+                    ) from exc
 
             row_end_to_end_id = sanitize_end_to_end_id(normalized_row.get("end_to_end_id", ""))
             if not row_end_to_end_id:
                 row_end_to_end_id = generate_end_to_end_id(seed=seed, row_number=row_number)
 
             row_purpose_code = normalized_row.get("purpose_code", "").strip().upper() or None
+
+            try:
+                amount = parse_amount_eur(normalized_row.get("amount", ""))
+            except ValueError as exc:
+                raise ValueError(f"Row {row_number}, field Betrag: {exc}") from exc
 
             payment = PaymentRecord(
                 row_number=row_number,
@@ -85,7 +95,7 @@ def parse_csv(
                 ),
                 creditor_iban=normalized_row.get("creditor_iban", "").replace(" ", "").upper(),
                 creditor_bic=(normalized_row.get("creditor_bic", "").strip().upper() or None),
-                amount=parse_amount_eur(normalized_row.get("amount", "")),
+                amount=amount,
                 remittance_unstructured=sanitize_text(
                     normalized_row.get("remittance_unstructured", ""),
                     max_length=140,

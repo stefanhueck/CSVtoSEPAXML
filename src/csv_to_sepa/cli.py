@@ -25,6 +25,12 @@ CLI_MESSAGES = {
         "xml_stats": "Transactions: {rows} Total: {total:.2f} EUR",
         "xml_valid": "XML is valid against XSD",
         "validation_failed": "Validation failed:",
+        "command_failed": "Command failed:",
+        "possible_causes": "Possible causes:",
+        "cause_config": "- Invalid config file or missing required fields",
+        "cause_csv": "- CSV format mismatch, invalid value, or wrong delimiter/encoding",
+        "cause_dates": "- Invalid date in CSV or execution date settings",
+        "cause_data": "- Business-rule violation (e.g. invalid IBAN/BIC, duplicate EndToEndId)",
         "validation_prefix_row": "row {row}",
         "validation_prefix_global": "global",
         "template_written": "CSV template written to {path} (mode={mode})",
@@ -42,6 +48,12 @@ CLI_MESSAGES = {
         "xml_stats": "Transaktionen: {rows} Summe: {total:.2f} EUR",
         "xml_valid": "XML ist gegen XSD gültig",
         "validation_failed": "Validierung fehlgeschlagen:",
+        "command_failed": "Befehl fehlgeschlagen:",
+        "possible_causes": "Mögliche Ursachen:",
+        "cause_config": "- Ungültige Konfigurationsdatei oder fehlende Pflichtfelder",
+        "cause_csv": "- CSV-Format passt nicht, ungültiger Wert, oder falscher Trenner/Encoding",
+        "cause_dates": "- Ungültiges Datum in CSV oder in den Ausführungsdatum-Einstellungen",
+        "cause_data": "- Verstoß gegen Fachregeln (z. B. ungültige IBAN/BIC, doppelte EndToEndId)",
         "validation_prefix_row": "Zeile {row}",
         "validation_prefix_global": "global",
         "template_written": "CSV-Template wurde geschrieben: {path} (Modus={mode})",
@@ -152,35 +164,45 @@ def cmd_create_template(args: argparse.Namespace) -> None:
 
 def cmd_validate_csv(args: argparse.Namespace) -> None:
     msg = _messages(args.language)
-    config = load_config(args.config)
-    execution_date = parse_execution_date(args.execution_date or config.default_execution_date, config.execution_date_offset_days)
-    payments = parse_csv(
-        file_path=args.input,
-        execution_date=execution_date,
-        delimiter=args.delimiter,
-        encoding=args.encoding,
-        strict_ascii=args.strict_ascii,
-    )
-    validate_payments(config, payments)
-    total = sum(p.amount for p in payments)
-    print(msg["csv_valid"].format(rows=len(payments), total=total))
+    try:
+        config = load_config(args.config)
+        execution_date = parse_execution_date(args.execution_date or config.default_execution_date, config.execution_date_offset_days)
+        payments = parse_csv(
+            file_path=args.input,
+            execution_date=execution_date,
+            delimiter=args.delimiter,
+            encoding=args.encoding,
+            strict_ascii=args.strict_ascii,
+        )
+        validate_payments(config, payments)
+        total = sum(p.amount for p in payments)
+        print(msg["csv_valid"].format(rows=len(payments), total=total))
+    except ValidationError as exc:
+        _print_validation_issues(exc, args.language)
+        raise SystemExit(2) from exc
+    except Exception as exc:
+        _print_generic_error(exc, args.language)
+        raise SystemExit(2) from exc
 
 
 def cmd_convert(args: argparse.Namespace) -> None:
     msg = _messages(args.language)
-    config = load_config(args.config)
-    execution_date = parse_execution_date(args.execution_date or config.default_execution_date, config.execution_date_offset_days)
-    payments = parse_csv(
-        file_path=args.input,
-        execution_date=execution_date,
-        delimiter=args.delimiter,
-        encoding=args.encoding,
-        strict_ascii=args.strict_ascii,
-    )
     try:
+        config = load_config(args.config)
+        execution_date = parse_execution_date(args.execution_date or config.default_execution_date, config.execution_date_offset_days)
+        payments = parse_csv(
+            file_path=args.input,
+            execution_date=execution_date,
+            delimiter=args.delimiter,
+            encoding=args.encoding,
+            strict_ascii=args.strict_ascii,
+        )
         validate_payments(config, payments)
     except ValidationError as exc:
         _print_validation_issues(exc, args.language)
+        raise SystemExit(2) from exc
+    except Exception as exc:
+        _print_generic_error(exc, args.language)
         raise SystemExit(2) from exc
 
     xml_bytes = build_pain_001_001_09(config, payments)
@@ -222,6 +244,17 @@ def _print_validation_issues(exc: ValidationError, language: str) -> None:
         else:
             prefix = msg["validation_prefix_global"]
         print(f"- {prefix} | {issue.field} | {issue.code} | {issue.message}")
+
+
+def _print_generic_error(exc: Exception, language: str) -> None:
+    msg = _messages(language)
+    print(msg["command_failed"])
+    print(f"- {type(exc).__name__}: {exc}")
+    print(msg["possible_causes"])
+    print(msg["cause_config"])
+    print(msg["cause_csv"])
+    print(msg["cause_dates"])
+    print(msg["cause_data"])
 
 
 def _messages(language: str) -> dict[str, str]:

@@ -119,6 +119,9 @@ csv-to-sepa validate-csv config.json examples/input_minimal.csv
 csv-to-sepa validate-csv config.json examples/input_minimal.csv --language de
 ```
 
+Bei Fehlern werden aussagekräftige Logs ausgegeben (z. B. Zeile/Feld/Ursache),
+statt nur mit einem allgemeinen Fehler abzubrechen.
+
 ## XML erzeugen
 
 ```bash
@@ -128,6 +131,9 @@ csv-to-sepa convert config.json examples/input_minimal.csv output.xml
 ```bash
 csv-to-sepa convert config.json examples/input_minimal.csv output.xml --language de
 ```
+
+Auch beim Konvertieren werden Validierungs- und Einlesefehler detailliert
+ausgegeben, damit Korrekturen in der CSV schneller möglich sind.
 
 Erweiterte CSV nutzen:
 
