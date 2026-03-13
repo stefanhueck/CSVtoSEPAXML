@@ -88,10 +88,30 @@ Minimal template:
 csv-to-sepa create-template template_minimal.csv --mode minimal
 ```
 
+By default, generated template headers are English.
+
+Generate template headers in English:
+
+```bash
+csv-to-sepa create-template template_minimal_en.csv --mode minimal --template-header-language en
+```
+
+Generate template headers in German:
+
+```bash
+csv-to-sepa create-template template_minimal_de.csv --mode minimal --template-header-language de
+```
+
 Switch output language:
 
 ```bash
 csv-to-sepa create-template template_minimal.csv --mode minimal --language de
+```
+
+You can combine both options, for example German output messages with English template headers:
+
+```bash
+csv-to-sepa create-template template_extended_en.csv --mode extended --template-header-language en --language de
 ```
 
 Extended template:

@@ -85,6 +85,12 @@ def main() -> None:
         help="Template mode (minimal or extended)",
     )
     template_parser.add_argument(
+        "--template-header-language",
+        choices=["de", "en"],
+        default="en",
+        help="Header label language for generated template (default: en)",
+    )
+    template_parser.add_argument(
         "--language",
         choices=["en", "de"],
         default="en",
@@ -158,6 +164,7 @@ def cmd_create_template(args: argparse.Namespace) -> None:
         mode=args.mode,
         delimiter=args.delimiter,
         encoding=args.encoding,
+        header_language=args.template_header_language,
     )
     print(msg["template_written"].format(path=args.output, mode=args.mode))
 
