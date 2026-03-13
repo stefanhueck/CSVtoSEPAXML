@@ -152,6 +152,7 @@ def cmd_init_config(args: argparse.Namespace) -> None:
     print(msg["config_written"].format(path=args.output))
     print(msg["debtor_iban"].format(iban=config.debtor_iban))
     print(msg["next_steps"])
+    print(msg["Validate CSV and convert to XML (replace example file with own input CSV):"].format(config=args.output))
     print(msg["next_validate"].format(config=args.output))
     print(msg["next_convert"].format(config=args.output))
     print(msg["readme_hint"])
