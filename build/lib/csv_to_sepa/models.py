@@ -36,6 +36,7 @@ class ValidationIssue:
     field: str
     code: str
     message: str
+    value: str | None = None
 
 
 class ValidationError(Exception):

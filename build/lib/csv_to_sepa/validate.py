@@ -49,15 +49,55 @@ def validate_payments(config: AppConfig, payments: list[PaymentRecord]) -> None:
 
     for payment in payments:
         if not payment.creditor_name:
-            issues.append(_issue(payment.row_number, "Name", "REQUIRED", "creditor name is empty"))
+            issues.append(
+                _issue(
+                    payment.row_number,
+                    "Name",
+                    "REQUIRED",
+                    "creditor name is empty",
+                    value=payment.creditor_name,
+                )
+            )
         if len(payment.creditor_name) > 70:
-            issues.append(_issue(payment.row_number, "Name", "TOO_LONG", "name exceeds 70 chars"))
+            issues.append(
+                _issue(
+                    payment.row_number,
+                    "Name",
+                    "TOO_LONG",
+                    "name exceeds 70 chars",
+                    value=payment.creditor_name,
+                )
+            )
         if not validate_iban(payment.creditor_iban):
-            issues.append(_issue(payment.row_number, "IBAN", "INVALID_IBAN", "invalid creditor IBAN"))
+            issues.append(
+                _issue(
+                    payment.row_number,
+                    "IBAN",
+                    "INVALID_IBAN",
+                    "invalid creditor IBAN",
+                    value=payment.creditor_iban,
+                )
+            )
         if payment.creditor_bic and not validate_bic(payment.creditor_bic):
-            issues.append(_issue(payment.row_number, "BIC", "INVALID_BIC", "invalid creditor BIC"))
+            issues.append(
+                _issue(
+                    payment.row_number,
+                    "BIC",
+                    "INVALID_BIC",
+                    "invalid creditor BIC",
+                    value=payment.creditor_bic,
+                )
+            )
         if payment.amount <= Decimal("0"):
-            issues.append(_issue(payment.row_number, "Betrag", "INVALID_AMOUNT", "amount must be > 0"))
+            issues.append(
+                _issue(
+                    payment.row_number,
+                    "Betrag",
+                    "INVALID_AMOUNT",
+                    "amount must be > 0",
+                    value=str(payment.amount),
+                )
+            )
         if len(payment.remittance_unstructured) > 140:
             issues.append(
                 _issue(
@@ -65,6 +105,7 @@ def validate_payments(config: AppConfig, payments: list[PaymentRecord]) -> None:
                     "Verwendungszweck",
                     "TOO_LONG",
                     "remittance text exceeds 140 chars",
+                    value=payment.remittance_unstructured,
                 )
             )
         if len(payment.end_to_end_id) > 35:
@@ -74,6 +115,7 @@ def validate_payments(config: AppConfig, payments: list[PaymentRecord]) -> None:
                     "EndToEndId",
                     "TOO_LONG",
                     "EndToEndId exceeds 35 chars",
+                    value=payment.end_to_end_id,
                 )
             )
         if not _E2E_RE.match(payment.end_to_end_id):
@@ -83,6 +125,7 @@ def validate_payments(config: AppConfig, payments: list[PaymentRecord]) -> None:
                     "EndToEndId",
                     "INVALID_FORMAT",
                     "EndToEndId must match [A-Za-z0-9-./:] and be 1..35 chars",
+                    value=payment.end_to_end_id,
                 )
             )
         if payment.end_to_end_id in seen_e2e:
@@ -92,27 +135,31 @@ def validate_payments(config: AppConfig, payments: list[PaymentRecord]) -> None:
                     "EndToEndId",
                     "DUPLICATE",
                     "EndToEndId must be unique",
+                    value=payment.end_to_end_id,
                 )
             )
-            if payment.execution_date < date.today():
-                issues.append(
-                    _issue(
-                        payment.row_number,
-                        "ExecutionDate",
-                        "IN_PAST",
-                        "execution date must not be in the past",
-                    )
-                )
 
-            if payment.purpose_code and not _PURPOSE_RE.match(payment.purpose_code):
-                issues.append(
-                    _issue(
-                        payment.row_number,
-                        "PurposeCode",
-                        "INVALID_FORMAT",
-                        "PurposeCode must be 4 upper-case letters or digits",
-                    )
+        if payment.execution_date < date.today():
+            issues.append(
+                _issue(
+                    payment.row_number,
+                    "ExecutionDate",
+                    "IN_PAST",
+                    "execution date must not be in the past",
+                    value=payment.execution_date.isoformat(),
                 )
+            )
+
+        if payment.purpose_code and not _PURPOSE_RE.match(payment.purpose_code):
+            issues.append(
+                _issue(
+                    payment.row_number,
+                    "PurposeCode",
+                    "INVALID_FORMAT",
+                    "PurposeCode must be 4 upper-case letters or digits",
+                    value=payment.purpose_code,
+                )
+            )
 
         seen_e2e.add(payment.end_to_end_id)
 
@@ -123,17 +170,49 @@ def validate_payments(config: AppConfig, payments: list[PaymentRecord]) -> None:
                     "IBAN",
                     "SELF_TRANSFER",
                     "creditor IBAN must differ from debtor IBAN",
+                    value=payment.creditor_iban,
                 )
             )
 
     if not validate_iban(config.debtor_iban):
-        issues.append(_issue(0, "Config.debtor_iban", "INVALID_IBAN", "invalid debtor IBAN"))
+        issues.append(
+            _issue(
+                0,
+                "Config.debtor_iban",
+                "INVALID_IBAN",
+                "invalid debtor IBAN",
+                value=config.debtor_iban,
+            )
+        )
     if config.debtor_bic and not validate_bic(config.debtor_bic):
-        issues.append(_issue(0, "Config.debtor_bic", "INVALID_BIC", "invalid debtor BIC"))
+        issues.append(
+            _issue(
+                0,
+                "Config.debtor_bic",
+                "INVALID_BIC",
+                "invalid debtor BIC",
+                value=config.debtor_bic,
+            )
+        )
 
     if issues:
         raise ValidationError(issues)
 
 
-def _issue(row: int, field: str, code: str, message: str) -> ValidationIssue:
-    return ValidationIssue(row_number=row, field=field, code=code, message=message)
+def _issue(row: int, field: str, code: str, message: str, value: str | None = None) -> ValidationIssue:
+    return ValidationIssue(
+        row_number=row,
+        field=field,
+        code=code,
+        message=message,
+        value=_value_snippet(value),
+    )
+
+
+def _value_snippet(value: str | None, max_length: int = 120) -> str | None:
+    if value is None:
+        return None
+    text = str(value).replace("\r", " ").replace("\n", " ").strip()
+    if len(text) <= max_length:
+        return text
+    return f"{text[: max_length - 1]}…"

@@ -243,7 +243,8 @@ def _print_validation_issues(exc: ValidationError, language: str) -> None:
             prefix = msg["validation_prefix_row"].format(row=issue.row_number)
         else:
             prefix = msg["validation_prefix_global"]
-        print(f"- {prefix} | {issue.field} | {issue.code} | {issue.message}")
+        value_suffix = f" | value={issue.value}" if issue.value else ""
+        print(f"- {prefix} | {issue.field} | {issue.code} | {issue.message}{value_suffix}")
 
 
 def _print_generic_error(exc: Exception, language: str) -> None:
