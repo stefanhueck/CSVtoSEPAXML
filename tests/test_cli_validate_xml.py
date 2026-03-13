@@ -19,6 +19,7 @@ def test_validate_xml_missing_xsd_shows_friendly_message(capsys, tmp_path) -> No
         cmd_validate_xml(args)
 
     assert "XSD file not found" in str(exc.value)
+    assert "pass an explicit path" in str(exc.value)
 
 
 def test_validate_xml_missing_xml_shows_friendly_message(capsys, tmp_path) -> None:

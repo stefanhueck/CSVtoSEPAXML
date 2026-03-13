@@ -37,6 +37,7 @@ CLI_MESSAGES = {
         "xsd_import_error": "lxml is required for validate-xml (pip install .[xml])",
         "xml_input_missing": "XML input file not found: {path}",
         "xsd_input_missing": "XSD file not found: {path}",
+        "xsd_input_missing_hint": "Hint: place the XSD file in your current directory or pass an explicit path, e.g. csv-to-sepa validate-xml output.xml ./xsd/pain.001.001.09.xsd",
         "xml_read_error": "Could not read XML/XSD: {error}",
     },
     "de": {
@@ -63,6 +64,7 @@ CLI_MESSAGES = {
         "xsd_import_error": "lxml wird für validate-xml benötigt (pip install .[xml])",
         "xml_input_missing": "XML-Eingabedatei nicht gefunden: {path}",
         "xsd_input_missing": "XSD-Datei nicht gefunden: {path}",
+        "xsd_input_missing_hint": "Hinweis: Lege die XSD-Datei im aktuellen Verzeichnis ab oder übergib einen expliziten Pfad, z. B. csv-to-sepa validate-xml output.xml ./xsd/pain.001.001.09.xsd",
         "xml_read_error": "XML/XSD konnte nicht gelesen werden: {error}",
     },
 }
@@ -241,7 +243,9 @@ def cmd_validate_xml(args: argparse.Namespace) -> None:
     if not xml_path.exists():
         raise SystemExit(msg["xml_input_missing"].format(path=str(xml_path)))
     if not xsd_path.exists():
-        raise SystemExit(msg["xsd_input_missing"].format(path=str(xsd_path)))
+        raise SystemExit(
+            f"{msg['xsd_input_missing'].format(path=str(xsd_path))}\n{msg['xsd_input_missing_hint']}"
+        )
 
     try:
         xml_doc = etree.parse(str(xml_path))
