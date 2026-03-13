@@ -32,3 +32,17 @@ def test_parse_extended_csv_with_english_headers(tmp_path) -> None:
     assert payments[0].end_to_end_id == "INV-2002"
     assert payments[0].execution_date == date(2026, 3, 20)
     assert payments[0].purpose_code == "TRAD"
+
+
+def test_parse_csv_iban_with_leading_trailing_spaces(tmp_path) -> None:
+    csv_content = (
+        "CreditorName;RemittanceInformation;Amount;CreditorIBAN;CreditorBIC\n"
+        "Receiver Three;Invoice 3003;10,00; DE89 3704 0044 0532 0130 00 ;COBADEFFXXX\n"
+    )
+    file_path = tmp_path / "iban_spaces.csv"
+    file_path.write_text(csv_content, encoding="utf-8")
+
+    payments = parse_csv(file_path, execution_date=date(2026, 3, 16))
+
+    assert len(payments) == 1
+    assert payments[0].creditor_iban == "DE89370400440532013000"

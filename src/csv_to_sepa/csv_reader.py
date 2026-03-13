@@ -104,7 +104,7 @@ def parse_csv(
                     max_length=70,
                     strict_ascii=strict_ascii,
                 ),
-                creditor_iban=normalized_row.get("creditor_iban", "").replace(" ", "").upper(),
+                creditor_iban="".join(normalized_row.get("creditor_iban", "").split()).upper(),
                 creditor_bic=(normalized_row.get("creditor_bic", "").strip().upper() or None),
                 amount=amount,
                 remittance_unstructured=sanitize_text(

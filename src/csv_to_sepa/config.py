@@ -48,6 +48,9 @@ def load_config(path: str | Path) -> AppConfig:
     with config_path.open("r", encoding="utf-8") as handle:
         raw = json.load(handle)
     config = AppConfig(**raw)
+    config.debtor_iban = "".join(config.debtor_iban.split()).upper()
+    if config.debtor_bic:
+        config.debtor_bic = "".join(config.debtor_bic.split()).upper()
     _validate_config(config)
     return config
 
@@ -118,7 +121,7 @@ def _prompt_non_empty(label: str, messages: dict[str, str]) -> str:
 
 def _prompt_iban(label: str, messages: dict[str, str]) -> str:
     while True:
-        value = input(f"{label}: ").strip().replace(" ", "").upper()
+        value = "".join(input(f"{label}: ").split()).upper()
         if validate_iban(value):
             return value
         print(messages["warn_invalid_iban"])

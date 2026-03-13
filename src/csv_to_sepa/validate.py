@@ -12,7 +12,7 @@ _PURPOSE_RE = re.compile(r"^[A-Z0-9]{4}$")
 
 
 def validate_iban(iban: str) -> bool:
-    value = iban.replace(" ", "").upper()
+    value = "".join(iban.split()).upper()
     if len(value) < 15 or len(value) > 34:
         return False
     if not value[:2].isalpha() or not value[2:4].isdigit():

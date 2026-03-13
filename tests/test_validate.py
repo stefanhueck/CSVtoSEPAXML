@@ -11,6 +11,10 @@ def test_validate_iban_ok() -> None:
     assert validate_iban("DE89370400440532013000")
 
 
+def test_validate_iban_with_whitespace_ok() -> None:
+    assert validate_iban(" DE89 3704 0044 0532 0130 00 ")
+
+
 def test_validate_bic_ok() -> None:
     assert validate_bic("COKSDE33XXX")
 
