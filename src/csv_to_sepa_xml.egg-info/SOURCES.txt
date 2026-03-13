@@ -1,3 +1,4 @@
+LICENSE
 README.md
 pyproject.toml
 src/csv_to_sepa/__init__.py
@@ -16,6 +17,8 @@ src/csv_to_sepa_xml.egg-info/dependency_links.txt
 src/csv_to_sepa_xml.egg-info/entry_points.txt
 src/csv_to_sepa_xml.egg-info/requires.txt
 src/csv_to_sepa_xml.egg-info/top_level.txt
+tests/test_cli_init_config.py
+tests/test_cli_localization.py
 tests/test_config_interactive.py
 tests/test_csv_reader_extended.py
 tests/test_normalize.py

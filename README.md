@@ -55,12 +55,23 @@ Interaktiv:
 csv-to-sepa init-config config.json
 ```
 
+Sprache (Standard Englisch, optional Deutsch):
+
+```bash
+csv-to-sepa init-config config.json --language en
+csv-to-sepa init-config config.json --language de
+```
+
 Eingaben werden dabei direkt validiert. Bei ungültigen Werten erscheint ein Hinweis
 und dieselbe Eingabe wird erneut abgefragt (z. B. bei ungültiger IBAN/BIC/Datum).
 
 - `default_execution_date` ist optional; bei leerer Eingabe wird automatisch
 	das aktuelle Datum gesetzt.
 - `charge_bearer` ist optional; bei leerer Eingabe wird `SLEV` gesetzt.
+
+Nach erfolgreichem Abschluss zeigt der Befehl direkt die nächsten erwarteten
+Schritte zum Validieren und Konvertieren der CSV sowie einen Hinweis auf die
+README.
 
 Oder Vorlage nutzen: `examples/config.example.json`.
 
@@ -70,6 +81,12 @@ Minimales Template:
 
 ```bash
 csv-to-sepa create-template template_minimal.csv --mode minimal
+```
+
+Ausgabesprache umschalten:
+
+```bash
+csv-to-sepa create-template template_minimal.csv --mode minimal --language de
 ```
 
 Erweitertes Template:
@@ -84,10 +101,18 @@ csv-to-sepa create-template template_extended.csv --mode extended
 csv-to-sepa validate-csv config.json examples/input_minimal.csv
 ```
 
+```bash
+csv-to-sepa validate-csv config.json examples/input_minimal.csv --language de
+```
+
 ## XML erzeugen
 
 ```bash
 csv-to-sepa convert config.json examples/input_minimal.csv output.xml
+```
+
+```bash
+csv-to-sepa convert config.json examples/input_minimal.csv output.xml --language de
 ```
 
 Erweiterte CSV nutzen:
@@ -106,6 +131,10 @@ csv-to-sepa convert config.json examples/input_minimal.csv output.xml --executio
 
 ```bash
 csv-to-sepa validate-xml output.xml pain.001.001.09.xsd
+```
+
+```bash
+csv-to-sepa validate-xml output.xml pain.001.001.09.xsd --language de
 ```
 
 ## Tests

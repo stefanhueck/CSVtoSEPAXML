@@ -25,7 +25,7 @@ def test_create_config_interactive_retries_and_defaults(monkeypatch, tmp_path) -
 
     monkeypatch.setattr("builtins.input", lambda _: next(inputs))
 
-    config = create_config_interactive(output)
+    config = create_config_interactive(output, language="en")
 
     assert config.debtor_name == "Beispiel Verein"
     assert config.debtor_iban == "DE89370400440532013000"
@@ -33,3 +33,26 @@ def test_create_config_interactive_retries_and_defaults(monkeypatch, tmp_path) -
     assert config.default_execution_date == today_iso
     assert config.charge_bearer == "SLEV"
     assert output.exists()
+
+
+def test_create_config_interactive_de_language(monkeypatch, tmp_path) -> None:
+    output = tmp_path / "config_de.json"
+    today_iso = date.today().isoformat()
+
+    inputs = iter(
+        [
+            "Verein DE",
+            "DE89370400440532013000",
+            "",
+            "",
+            "",
+            "",
+        ]
+    )
+    monkeypatch.setattr("builtins.input", lambda _: next(inputs))
+
+    config = create_config_interactive(output, language="de")
+
+    assert config.debtor_name == "Verein DE"
+    assert config.default_execution_date == today_iso
+    assert config.charge_bearer == "SLEV"

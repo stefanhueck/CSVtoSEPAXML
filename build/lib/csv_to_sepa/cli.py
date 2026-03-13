@@ -12,12 +12,56 @@ from .template import create_csv_template
 from .validate import validate_payments
 
 
+CLI_MESSAGES = {
+    "en": {
+        "config_written": "Config written to {path}",
+        "debtor_iban": "Debtor IBAN: {iban}",
+        "next_steps": "Next steps:",
+        "next_validate": "- csv-to-sepa validate-csv {config} examples/input_minimal.csv",
+        "next_convert": "- csv-to-sepa convert {config} examples/input_minimal.csv output.xml",
+        "readme_hint": "- See README.md for full usage and extended CSV examples",
+        "csv_valid": "CSV valid. Rows: {rows} Total: {total:.2f} EUR",
+        "xml_written": "XML written to {path}",
+        "xml_stats": "Transactions: {rows} Total: {total:.2f} EUR",
+        "xml_valid": "XML is valid against XSD",
+        "validation_failed": "Validation failed:",
+        "validation_prefix_row": "row {row}",
+        "validation_prefix_global": "global",
+        "template_written": "CSV template written to {path} (mode={mode})",
+        "xsd_import_error": "lxml is required for validate-xml (pip install .[xml])",
+    },
+    "de": {
+        "config_written": "Konfiguration wurde geschrieben: {path}",
+        "debtor_iban": "Debitor-IBAN: {iban}",
+        "next_steps": "Nächste Schritte:",
+        "next_validate": "- csv-to-sepa validate-csv {config} examples/input_minimal.csv",
+        "next_convert": "- csv-to-sepa convert {config} examples/input_minimal.csv output.xml",
+        "readme_hint": "- Siehe README.md für vollständige Nutzung und erweiterte CSV-Beispiele",
+        "csv_valid": "CSV ist gültig. Zeilen: {rows} Summe: {total:.2f} EUR",
+        "xml_written": "XML wurde geschrieben: {path}",
+        "xml_stats": "Transaktionen: {rows} Summe: {total:.2f} EUR",
+        "xml_valid": "XML ist gegen XSD gültig",
+        "validation_failed": "Validierung fehlgeschlagen:",
+        "validation_prefix_row": "Zeile {row}",
+        "validation_prefix_global": "global",
+        "template_written": "CSV-Template wurde geschrieben: {path} (Modus={mode})",
+        "xsd_import_error": "lxml wird für validate-xml benötigt (pip install .[xml])",
+    },
+}
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="CSV to SEPA pain.001.001.09 converter")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     init_config_parser = subparsers.add_parser("init-config", help="Create a config JSON file")
     init_config_parser.add_argument("output", help="Path to output config JSON")
+    init_config_parser.add_argument(
+        "--language",
+        choices=["en", "de"],
+        default="en",
+        help="Prompt language for interactive setup (default: en)",
+    )
     init_config_parser.set_defaults(func=cmd_init_config)
 
     template_parser = subparsers.add_parser("create-template", help="Create a CSV template file")
@@ -27,6 +71,12 @@ def main() -> None:
         choices=["minimal", "extended"],
         default="minimal",
         help="Template mode (minimal or extended)",
+    )
+    template_parser.add_argument(
+        "--language",
+        choices=["en", "de"],
+        default="en",
+        help="Output language (default: en)",
     )
     template_parser.add_argument("--delimiter", default=";", help="CSV delimiter (default: ;)")
     template_parser.add_argument("--encoding", default="utf-8-sig", help="CSV encoding (default: utf-8-sig)")
@@ -39,6 +89,12 @@ def main() -> None:
     validate_csv_parser.add_argument("--encoding", default="utf-8-sig", help="CSV encoding (default: utf-8-sig)")
     validate_csv_parser.add_argument("--execution-date", help="Override execution date YYYY-MM-DD")
     validate_csv_parser.add_argument("--strict-ascii", action="store_true", help="Transliterate text to ASCII")
+    validate_csv_parser.add_argument(
+        "--language",
+        choices=["en", "de"],
+        default="en",
+        help="Output language (default: en)",
+    )
     validate_csv_parser.set_defaults(func=cmd_validate_csv)
 
     convert_parser = subparsers.add_parser("convert", help="Convert CSV to pain.001.001.09 XML")
@@ -49,11 +105,23 @@ def main() -> None:
     convert_parser.add_argument("--encoding", default="utf-8-sig", help="CSV encoding (default: utf-8-sig)")
     convert_parser.add_argument("--execution-date", help="Override execution date YYYY-MM-DD")
     convert_parser.add_argument("--strict-ascii", action="store_true", help="Transliterate text to ASCII")
+    convert_parser.add_argument(
+        "--language",
+        choices=["en", "de"],
+        default="en",
+        help="Output language (default: en)",
+    )
     convert_parser.set_defaults(func=cmd_convert)
 
     validate_xml_parser = subparsers.add_parser("validate-xml", help="Validate XML against XSD using lxml")
     validate_xml_parser.add_argument("input", help="Path to XML file")
     validate_xml_parser.add_argument("xsd", help="Path to XSD file")
+    validate_xml_parser.add_argument(
+        "--language",
+        choices=["en", "de"],
+        default="en",
+        help="Output language (default: en)",
+    )
     validate_xml_parser.set_defaults(func=cmd_validate_xml)
 
     args = parser.parse_args()
@@ -61,22 +129,29 @@ def main() -> None:
 
 
 def cmd_init_config(args: argparse.Namespace) -> None:
-    config = create_config_interactive(args.output)
-    print(f"Config written to {args.output}")
-    print(f"Debtor IBAN: {config.debtor_iban}")
+    msg = _messages(args.language)
+    config = create_config_interactive(args.output, language=args.language)
+    print(msg["config_written"].format(path=args.output))
+    print(msg["debtor_iban"].format(iban=config.debtor_iban))
+    print(msg["next_steps"])
+    print(msg["next_validate"].format(config=args.output))
+    print(msg["next_convert"].format(config=args.output))
+    print(msg["readme_hint"])
 
 
 def cmd_create_template(args: argparse.Namespace) -> None:
+    msg = _messages(args.language)
     create_csv_template(
         output=args.output,
         mode=args.mode,
         delimiter=args.delimiter,
         encoding=args.encoding,
     )
-    print(f"CSV template written to {args.output} (mode={args.mode})")
+    print(msg["template_written"].format(path=args.output, mode=args.mode))
 
 
 def cmd_validate_csv(args: argparse.Namespace) -> None:
+    msg = _messages(args.language)
     config = load_config(args.config)
     execution_date = parse_execution_date(args.execution_date or config.default_execution_date, config.execution_date_offset_days)
     payments = parse_csv(
@@ -88,10 +163,11 @@ def cmd_validate_csv(args: argparse.Namespace) -> None:
     )
     validate_payments(config, payments)
     total = sum(p.amount for p in payments)
-    print(f"CSV valid. Rows: {len(payments)} Total: {total:.2f} EUR")
+    print(msg["csv_valid"].format(rows=len(payments), total=total))
 
 
 def cmd_convert(args: argparse.Namespace) -> None:
+    msg = _messages(args.language)
     config = load_config(args.config)
     execution_date = parse_execution_date(args.execution_date or config.default_execution_date, config.execution_date_offset_days)
     payments = parse_csv(
@@ -104,7 +180,7 @@ def cmd_convert(args: argparse.Namespace) -> None:
     try:
         validate_payments(config, payments)
     except ValidationError as exc:
-        _print_validation_issues(exc)
+        _print_validation_issues(exc, args.language)
         raise SystemExit(2) from exc
 
     xml_bytes = build_pain_001_001_09(config, payments)
@@ -113,22 +189,23 @@ def cmd_convert(args: argparse.Namespace) -> None:
     output_path.write_bytes(xml_bytes)
 
     total = sum(p.amount for p in payments)
-    print(f"XML written to {args.output}")
-    print(f"Transactions: {len(payments)} Total: {total:.2f} EUR")
+    print(msg["xml_written"].format(path=args.output))
+    print(msg["xml_stats"].format(rows=len(payments), total=total))
 
 
 def cmd_validate_xml(args: argparse.Namespace) -> None:
+    msg = _messages(args.language)
     try:
         from lxml import etree
     except ImportError as exc:
-        raise SystemExit("lxml is required for validate-xml (pip install .[xml])") from exc
+        raise SystemExit(msg["xsd_import_error"]) from exc
 
     xml_doc = etree.parse(args.input)
     xsd_doc = etree.parse(args.xsd)
     schema = etree.XMLSchema(xsd_doc)
 
     if schema.validate(xml_doc):
-        print("XML is valid against XSD")
+        print(msg["xml_valid"])
         return
 
     for error in schema.error_log:
@@ -136,11 +213,19 @@ def cmd_validate_xml(args: argparse.Namespace) -> None:
     raise SystemExit(1)
 
 
-def _print_validation_issues(exc: ValidationError) -> None:
-    print("Validation failed:")
+def _print_validation_issues(exc: ValidationError, language: str) -> None:
+    msg = _messages(language)
+    print(msg["validation_failed"])
     for issue in exc.issues:
-        prefix = f"row {issue.row_number}" if issue.row_number else "global"
+        if issue.row_number:
+            prefix = msg["validation_prefix_row"].format(row=issue.row_number)
+        else:
+            prefix = msg["validation_prefix_global"]
         print(f"- {prefix} | {issue.field} | {issue.code} | {issue.message}")
+
+
+def _messages(language: str) -> dict[str, str]:
+    return CLI_MESSAGES["de"] if language.lower() == "de" else CLI_MESSAGES["en"]
 
 
 if __name__ == "__main__":
