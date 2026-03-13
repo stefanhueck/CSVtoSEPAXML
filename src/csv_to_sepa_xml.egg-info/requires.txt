@@ -1,6 +1,0 @@
-
-[dev]
-pytest>=8.0
-
-[xml]
-lxml>=5.0

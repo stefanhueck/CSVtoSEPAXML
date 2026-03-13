@@ -1,2 +1,0 @@
-[console_scripts]
-csv-to-sepa = csv_to_sepa.cli:main
