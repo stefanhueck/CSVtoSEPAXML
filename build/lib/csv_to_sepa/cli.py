@@ -8,6 +8,7 @@ from .csv_reader import parse_csv
 from .models import ValidationError
 from .normalize import parse_execution_date
 from .pain001_writer import build_pain_001_001_09
+from .template import create_csv_template
 from .validate import validate_payments
 
 
@@ -18,6 +19,18 @@ def main() -> None:
     init_config_parser = subparsers.add_parser("init-config", help="Create a config JSON file")
     init_config_parser.add_argument("output", help="Path to output config JSON")
     init_config_parser.set_defaults(func=cmd_init_config)
+
+    template_parser = subparsers.add_parser("create-template", help="Create a CSV template file")
+    template_parser.add_argument("output", help="Path to output CSV template")
+    template_parser.add_argument(
+        "--mode",
+        choices=["minimal", "extended"],
+        default="minimal",
+        help="Template mode (minimal or extended)",
+    )
+    template_parser.add_argument("--delimiter", default=";", help="CSV delimiter (default: ;)")
+    template_parser.add_argument("--encoding", default="utf-8-sig", help="CSV encoding (default: utf-8-sig)")
+    template_parser.set_defaults(func=cmd_create_template)
 
     validate_csv_parser = subparsers.add_parser("validate-csv", help="Validate CSV without creating XML")
     validate_csv_parser.add_argument("config", help="Path to config JSON")
@@ -51,6 +64,16 @@ def cmd_init_config(args: argparse.Namespace) -> None:
     config = create_config_interactive(args.output)
     print(f"Config written to {args.output}")
     print(f"Debtor IBAN: {config.debtor_iban}")
+
+
+def cmd_create_template(args: argparse.Namespace) -> None:
+    create_csv_template(
+        output=args.output,
+        mode=args.mode,
+        delimiter=args.delimiter,
+        encoding=args.encoding,
+    )
+    print(f"CSV template written to {args.output} (mode={args.mode})")
 
 
 def cmd_validate_csv(args: argparse.Namespace) -> None:

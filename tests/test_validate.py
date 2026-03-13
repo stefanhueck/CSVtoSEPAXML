@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
 import pytest
@@ -25,7 +25,7 @@ def test_validate_payments_reject_self_transfer() -> None:
             creditor_bic=None,
             amount=Decimal("10.00"),
             remittance_unstructured="Test",
-            execution_date=date(2026, 3, 14),
+            execution_date=date.today() + timedelta(days=1),
             end_to_end_id="E2E-1",
         )
     ]

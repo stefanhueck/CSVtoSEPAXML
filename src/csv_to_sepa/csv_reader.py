@@ -5,7 +5,13 @@ from datetime import date
 from pathlib import Path
 
 from .models import PaymentRecord
-from .normalize import generate_end_to_end_id, parse_amount_eur, sanitize_text
+from .normalize import (
+    generate_end_to_end_id,
+    parse_amount_eur,
+    parse_execution_date,
+    sanitize_end_to_end_id,
+    sanitize_text,
+)
 
 HEADER_ALIASES = {
     "Name": "creditor_name",
@@ -13,6 +19,12 @@ HEADER_ALIASES = {
     "Betrag": "amount",
     "IBAN": "creditor_iban",
     "BIC": "creditor_bic",
+    "EndToEndId": "end_to_end_id",
+    "ExecutionDate": "execution_date",
+    "PurposeCode": "purpose_code",
+    "Ausfuehrungsdatum": "execution_date",
+    "Ausführungsdatum": "execution_date",
+    "VerwendungszweckCode": "purpose_code",
 }
 
 REQUIRED_TARGET_FIELDS = {
@@ -53,6 +65,17 @@ def parse_csv(
                     normalized_row.get("remittance_unstructured", ""),
                 ]
             )
+
+            row_execution_date = execution_date
+            if normalized_row.get("execution_date", "").strip():
+                row_execution_date = parse_execution_date(normalized_row.get("execution_date", ""), offset_days=0)
+
+            row_end_to_end_id = sanitize_end_to_end_id(normalized_row.get("end_to_end_id", ""))
+            if not row_end_to_end_id:
+                row_end_to_end_id = generate_end_to_end_id(seed=seed, row_number=row_number)
+
+            row_purpose_code = normalized_row.get("purpose_code", "").strip().upper() or None
+
             payment = PaymentRecord(
                 row_number=row_number,
                 creditor_name=sanitize_text(
@@ -68,8 +91,9 @@ def parse_csv(
                     max_length=140,
                     strict_ascii=strict_ascii,
                 ),
-                execution_date=execution_date,
-                end_to_end_id=generate_end_to_end_id(seed=seed, row_number=row_number),
+                execution_date=row_execution_date,
+                end_to_end_id=row_end_to_end_id,
+                purpose_code=row_purpose_code,
             )
             payments.append(payment)
         return payments

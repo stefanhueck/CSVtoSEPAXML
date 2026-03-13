@@ -67,3 +67,9 @@ def generate_end_to_end_id(seed: str, row_number: int) -> str:
     candidate = f"E2E-{row_number}-{digest}"
     candidate = _E2E_ALLOWED_RE.sub("", candidate)
     return candidate[:35]
+
+
+def sanitize_end_to_end_id(value: str) -> str:
+    candidate = normalize_whitespace(value)
+    candidate = _E2E_ALLOWED_RE.sub("", candidate)
+    return candidate[:35]

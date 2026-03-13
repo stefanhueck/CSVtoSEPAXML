@@ -8,6 +8,7 @@ src/csv_to_sepa/csv_reader.py
 src/csv_to_sepa/models.py
 src/csv_to_sepa/normalize.py
 src/csv_to_sepa/pain001_writer.py
+src/csv_to_sepa/template.py
 src/csv_to_sepa/validate.py
 src/csv_to_sepa_xml.egg-info/PKG-INFO
 src/csv_to_sepa_xml.egg-info/SOURCES.txt
@@ -15,6 +16,9 @@ src/csv_to_sepa_xml.egg-info/dependency_links.txt
 src/csv_to_sepa_xml.egg-info/entry_points.txt
 src/csv_to_sepa_xml.egg-info/requires.txt
 src/csv_to_sepa_xml.egg-info/top_level.txt
+tests/test_config_interactive.py
+tests/test_csv_reader_extended.py
 tests/test_normalize.py
+tests/test_template.py
 tests/test_validate.py
 tests/test_writer.py

@@ -7,5 +7,6 @@ __all__ = [
     "models",
     "normalize",
     "pain001_writer",
+    "template",
     "validate",
 ]

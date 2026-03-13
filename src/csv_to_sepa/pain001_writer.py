@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import defaultdict
 import uuid
 from datetime import datetime, timezone
 from decimal import Decimal
@@ -20,7 +21,12 @@ def build_pain_001_001_09(config: AppConfig, payments: list[PaymentRecord]) -> b
     cstmr_cdt_trf_initn = ET.SubElement(document, _tag("CstmrCdtTrfInitn"))
 
     _build_group_header(cstmr_cdt_trf_initn, config, tx_count, total_amount)
-    _build_payment_info(cstmr_cdt_trf_initn, config, payments, total_amount)
+
+    grouped = _group_by_execution_date(payments)
+    for index, execution_date in enumerate(sorted(grouped.keys()), start=1):
+        payment_group = grouped[execution_date]
+        group_total = sum((payment.amount for payment in payment_group), Decimal("0.00"))
+        _build_payment_info(cstmr_cdt_trf_initn, config, payment_group, group_total, index)
 
     xml_bytes = ET.tostring(document, encoding="utf-8", xml_declaration=True)
     return xml_bytes
@@ -39,10 +45,16 @@ def _build_group_header(parent: ET.Element, config: AppConfig, tx_count: int, to
     ET.SubElement(initg_pty, _tag("Nm")).text = (config.initiating_party_name or config.debtor_name)[:70]
 
 
-def _build_payment_info(parent: ET.Element, config: AppConfig, payments: list[PaymentRecord], total_amount: Decimal) -> None:
+def _build_payment_info(
+    parent: ET.Element,
+    config: AppConfig,
+    payments: list[PaymentRecord],
+    total_amount: Decimal,
+    payment_info_index: int,
+) -> None:
     pmt_inf = ET.SubElement(parent, _tag("PmtInf"))
     now_utc = datetime.now(timezone.utc)
-    pmt_inf_id = f"PMT-{now_utc.strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:6].upper()}"
+    pmt_inf_id = f"PMT-{now_utc.strftime('%Y%m%d%H%M%S')}-{payment_info_index:03d}-{uuid.uuid4().hex[:4].upper()}"
     ET.SubElement(pmt_inf, _tag("PmtInfId")).text = pmt_inf_id[:35]
     ET.SubElement(pmt_inf, _tag("PmtMtd")).text = "TRF"
     ET.SubElement(pmt_inf, _tag("BtchBookg")).text = "true" if config.batch_booking else "false"
@@ -86,6 +98,10 @@ def _build_tx(parent: ET.Element, payment: PaymentRecord) -> None:
     instd_amt.set("Ccy", "EUR")
     instd_amt.text = _format_amount(payment.amount)
 
+    if payment.purpose_code:
+        purp = ET.SubElement(tx, _tag("Purp"))
+        ET.SubElement(purp, _tag("Cd")).text = payment.purpose_code
+
     if payment.creditor_bic:
         cdtr_agt = ET.SubElement(tx, _tag("CdtrAgt"))
         fin_inst_id = ET.SubElement(cdtr_agt, _tag("FinInstnId"))
@@ -108,3 +124,10 @@ def _tag(local_name: str) -> str:
 
 def _format_amount(amount: Decimal) -> str:
     return f"{amount.quantize(Decimal('0.01')):.2f}"
+
+
+def _group_by_execution_date(payments: list[PaymentRecord]) -> dict:
+    grouped: dict = defaultdict(list)
+    for payment in payments:
+        grouped[payment.execution_date].append(payment)
+    return grouped

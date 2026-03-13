@@ -1,11 +1,14 @@
 from __future__ import annotations
 
 import re
+from datetime import date
 from decimal import Decimal
 
 from .models import AppConfig, PaymentRecord, ValidationError, ValidationIssue
 
 _BIC_RE = re.compile(r"^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?$")
+_E2E_RE = re.compile(r"^[A-Za-z0-9\-\./:]{1,35}$")
+_PURPOSE_RE = re.compile(r"^[A-Z0-9]{4}$")
 
 
 def validate_iban(iban: str) -> bool:
@@ -73,6 +76,15 @@ def validate_payments(config: AppConfig, payments: list[PaymentRecord]) -> None:
                     "EndToEndId exceeds 35 chars",
                 )
             )
+        if not _E2E_RE.match(payment.end_to_end_id):
+            issues.append(
+                _issue(
+                    payment.row_number,
+                    "EndToEndId",
+                    "INVALID_FORMAT",
+                    "EndToEndId must match [A-Za-z0-9-./:] and be 1..35 chars",
+                )
+            )
         if payment.end_to_end_id in seen_e2e:
             issues.append(
                 _issue(
@@ -82,6 +94,26 @@ def validate_payments(config: AppConfig, payments: list[PaymentRecord]) -> None:
                     "EndToEndId must be unique",
                 )
             )
+            if payment.execution_date < date.today():
+                issues.append(
+                    _issue(
+                        payment.row_number,
+                        "ExecutionDate",
+                        "IN_PAST",
+                        "execution date must not be in the past",
+                    )
+                )
+
+            if payment.purpose_code and not _PURPOSE_RE.match(payment.purpose_code):
+                issues.append(
+                    _issue(
+                        payment.row_number,
+                        "PurposeCode",
+                        "INVALID_FORMAT",
+                        "PurposeCode must be 4 upper-case letters or digits",
+                    )
+                )
+
         seen_e2e.add(payment.end_to_end_id)
 
         if payment.creditor_iban == config.debtor_iban:

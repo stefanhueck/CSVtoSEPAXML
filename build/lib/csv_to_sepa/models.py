@@ -27,6 +27,7 @@ class PaymentRecord:
     remittance_unstructured: str
     execution_date: date
     end_to_end_id: str
+    purpose_code: str | None = None
 
 
 @dataclass(slots=True)
