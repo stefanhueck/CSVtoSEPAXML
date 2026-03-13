@@ -46,15 +46,24 @@ Backward compatibility:
 ```bash
 python -m venv .venv
 source .venv/bin/activate
-pip install -e .
-pip install -e .[dev]
+python -m pip install .
+python -m pip install '.[dev]'
 ```
 
 Optional for XSD validation:
 
 ```bash
-pip install -e .[xml]
+python -m pip install '.[xml]'
 ```
+
+Optional (editable install for local development):
+
+```bash
+python -m pip install -e .
+python -m pip install -e '.[dev]'
+```
+
+Note: On Python 3.13, editable installs can fail in some environments (module import errors from hidden `__editable__*.pth` files). If that happens, use the non-editable commands above.
 
 ## Configuration
 

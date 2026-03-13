@@ -124,6 +124,7 @@ Thumbs.db
 
 # IDEs
 .vscode/
+.vscode/settings.json
 .idea/
 *.swp
 *.swo
