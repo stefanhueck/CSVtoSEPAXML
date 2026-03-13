@@ -129,3 +129,4 @@ Thumbs.db
 
 # Project specific generated outputs
 output*.xml
+config.json
